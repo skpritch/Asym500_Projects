@@ -1,0 +1,35 @@
+name: asym500
+channels:
+  - pytorch
+  - nvidia     # modern CUDA wheels
+  - conda-forge
+dependencies:
+  - python=3.10
+  # deep-learning core
+  - pytorch
+  - torchvision
+  - torchaudio
+  # scientific stack
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - altair
+  - tqdm
+  - notebook
+  - ipython
+  - ipykernel
+  - streamlit
+  - uvicorn
+  - redis
+  - azure-identity
+  - azure-storage-blob
+  - pip
+  - pip:
+    - openai
+    - pyarrow
+    - pdfplumber
+    - backoff
+    - dotenv
