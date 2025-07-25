@@ -22,7 +22,7 @@ from typing import List
 import pandas as pd
 from tqdm import tqdm
 
-from scripts.pdf_utils import pdf_to_pages
+from fund_info_parser.scripts.parse_utils import pdf_to_pages
 from data.archive.fund_splitter import split_into_blocks
 from scripts.llm_client import extract_block
 

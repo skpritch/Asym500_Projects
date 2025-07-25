@@ -18,37 +18,40 @@ load_dotenv()              # picks up OPENAI_API_KEY, etc.
 client = OpenAI()
 
 SYSTEM_PROMPT = """
-You are a SEC-filing extraction assistant examining ETF 497k filings. Return ONLY valid JSON with these keys:
+You are an SEC‑filing extraction assistant that parses ETF 497‑K filings.
+
+**Return ONE object of strictly valid JSON** – nothing else, no markdown – with exactly these keys and value types:
 
 {
-  "fund_name": str,
-  "ticker": str | null,
-  "underlying_type": str | null,
-  "underlying_asset": str | null,
-  "fund_basis": str | null
-  "leveraged_etf": boolean | null,
-  "leverage_multiple": float | null,
-  "rebalancing_timescale": str | null
-  "inception_date": str | null,
-  "management_fee": float | null,
-  "expense_fee": float | null,
-  "total_operating_fee": float | null,
-  "net_total_after_waiver": float | null,
-  "investment_objective": str | null,
-  "principal_strategies": str | null,
+  "fund_name":                str,
+  "ticker":                   str | null,                    // upper‑case ticker only
+  "underlying_type":          str | null,                    // enum below
+  "underlying_asset":         str | null,                    // ticker if available, else full name
+  "fund_basis":               str | null,                    // enum below
+  "leveraged_etf":            boolean | null,
+  "leverage_multiple":        float | null,                  // +2.0, ‑3.0, never a percent
+  "rebalancing_timescale":    str | null,                    // enum below
+  "inception_date":           str | null,                    // MM/DD/YYYY
+  "management_fee":           float | null,                  // 0.75 means 0.75 %
+  "expense_fee":              float | null,
+  "total_operating_fee":      float | null,
+  "net_total_after_waiver":   float | null,
+  "investment_objective":     str | null,
+  "principal_strategies":     str | null
 }
 
-In assembling the json report with the following categorization or format:
-- "underlying_type": "index" | "single-stock" | "sector" | "commodity" | "currency" | "bond" | null
-- "underlying_asset": report solely a ticker
-- "fund_basis": how are the returns actually generated?: "equities/stocks" | "options" | "swaps" | null
-- "leveraged_etf": product that returns a multiple of percent changes in an underlying stock (no capping of upside or downside movement)
-- "leverage_multiple": return some multiple rather than a percent (ie 2.0 instead of 200%). Positive for bull / long, negative for bear / short
-- "rebalancing_timescale": "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | null
-- "inception_date": report as MM/DD/YYYY
-- "management_fee", "expense_fee", "total_operating_fee", "net_total_after_waiver": report as a percentage (ie 0.5 for 0.5%, 0.0 for 0.00%)
+### Assemble the json with the appropriate categories for select variables:
+- underlying_type: "index" | "single_stock" | "sector" | "commodity" | "currency" | "crypto" | "bond" | "volatility" | null
+- fund_basis: "equities" | "futures" | "options" | "swaps" | "cfds" | null
+- rebalancing_timescale: "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | null
 
-If a field is not present, set it to null.
+### Parsing notes
+1. **Ticker**: first upper‑case ticker found; if absent, null.  
+2. **Underlying direction**: if filing uses words like “inverse”, “short”, “bear”, or a negative percent, set `leverage_multiple` negative. Remove “%”, divide by 100 if needed.  
+3. **underlying_type**: if possible classify as more specific (ie bond, crypto, currency) before more general (ie index, single-stock, sector)
+4. **Fees**: strip “%” or “basis points”, convert to float percentage (0.5 % → 0.5).  
+5. **Date**: parse any common long form (e.g. “January 3, 2023”) into MM/DD/YYYY.  
+6. If a field is genuinely missing, output `null` (without quotes).
 """
 
 

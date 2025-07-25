@@ -7,9 +7,17 @@ Helpers to turn searchable SEC PDF pages into plain text strings.
 
 from pathlib import Path
 from typing import List
-
+from bs4 import BeautifulSoup
 import pdfplumber
 
+def html_to_text(html_path: Path) -> str:
+    """
+    Read an .htm/.html file and return its visible text.
+    """
+    raw = html_path.read_text(encoding='utf-8', errors='ignore')
+    soup = BeautifulSoup(raw, 'html.parser')
+    # get_text() will collapse tags into a single string
+    return soup.get_text(separator='\n')
 
 def pdf_to_pages(pdf_path: Path, *, x_tol: float = 2, y_tol: float = 2) -> List[str]:
     """
