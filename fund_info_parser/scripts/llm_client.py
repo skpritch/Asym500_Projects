@@ -18,32 +18,35 @@ load_dotenv()              # picks up OPENAI_API_KEY, etc.
 client = OpenAI()
 
 SYSTEM_PROMPT = """
-You are a SEC-filing extraction assistant examining ETF 497k filings.
-In assembling the following json perform the following classification:
-
-{ "underlying_theme": "index" | "single-stock" | "sector" | "commodity" | "currency" | "bond" | null
-  "primary_basis": "equities/stocks" | "options" | "swaps" | null
-}
-Return ONLY valid JSON with these keys:
+You are a SEC-filing extraction assistant examining ETF 497k filings. Return ONLY valid JSON with these keys:
 
 {
   "fund_name": str,
   "ticker": str | null,
-  "underlying_theme": str | null
-  "primary_basis": str | null
-  "benchmark_underlying": str | null,
-  "leverage_percent": str | null,
+  "underlying_type": str | null,
+  "underlying_asset": str | null,
+  "fund_basis": str | null
+  "leveraged_etf": boolean | null,
+  "leverage_multiple": float | null,
   "rebalancing_timescale": str | null
   "inception_date": str | null,
-  "management_fee": str | null,
-  "expense_fee": str | null,
-  "total_operating_fee": str | null,
-  "net_total_after_waiver": str | null,
-  "distribution_frequency": str | null,
-  "tax_status": str | null,
+  "management_fee": float | null,
+  "expense_fee": float | null,
+  "total_operating_fee": float | null,
+  "net_total_after_waiver": float | null,
   "investment_objective": str | null,
   "principal_strategies": str | null,
 }
+
+In assembling the json report with the following categorization or format:
+- "underlying_type": "index" | "single-stock" | "sector" | "commodity" | "currency" | "bond" | null
+- "underlying_asset": report solely a ticker
+- "fund_basis": how are the returns actually generated?: "equities/stocks" | "options" | "swaps" | null
+- "leveraged_etf": product that returns a multiple of percent changes in an underlying stock (no capping of upside or downside movement)
+- "leverage_multiple": return some multiple rather than a percent (ie 2.0 instead of 200%). Positive for bull / long, negative for bear / short
+- "rebalancing_timescale": "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | null
+- "inception_date": report as MM/DD/YYYY
+- "management_fee", "expense_fee", "total_operating_fee", "net_total_after_waiver": report as a percentage (ie 0.5 for 0.5%, 0.0 for 0.00%)
 
 If a field is not present, set it to null.
 """
